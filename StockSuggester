@@ -1,0 +1,118 @@
+
+
+from google import genai
+from google.genai import types
+import base64
+
+def generate():
+  client = genai.Client(
+      vertexai=True,
+      project="stock-suggester-461417",
+      location="us-central1",
+  )
+
+  msg1_text1 = types.Part.from_text(text="""You have to suggest trades based on the technical indicators and current market conditions:
+
+
+
+Follow these guidelines for intraday trades:
+
+1.  **Stock Selection**: Choose only highly liquid NIFTY 50 stocks or BankNifty options.
+2.  **Reward-to-Risk Ratio**: The reward-to-risk ratio must be at least 2:1. For example, if Stop Loss = ₹10, Target = ₹20.
+3.  **Confluence**: Only suggest trades with strong confluence (e.g., price action + indicator alignment).
+4.  **Trade Details**: For each trade, provide the following:
+    *   **Action**: Buy or Sell
+    *   **Entry Price**: The price at which to enter the trade.
+    *   **Stop Loss**: The stop loss price.
+    *   **Target**: The target price.
+    *   **Rationale**: A short explanation of why this trade is recommended based on the technical analysis.
+5.  **Small Cap Stock Recommendation**:
+    *   Suggest a small-cap stock that can provide a good return.
+    *   Provide the following details:
+        *   **Entry Price**: The price at which to buy the stock today.
+        *   **Target Price**: The expected target price.
+        *   **Sell Price**: The price at which to sell the stock.
+        *   **Stop Loss**: The stop loss price.
+        *   **Holding Period**: The expected period for which the stock should be held.
+        *   **Rationale**: Reasons for the recommendation based on today's market.
+        *   **Return Interest %**: The expected percentage return on investment.
+6.  **Market Condition**: Base your prediction on today's market conditions.
+7.  **Fail-Safe**: If you cannot find three trades that meet these criteria, state: \"Based on the current analysis, I cannot confidently recommend three intraday trades that meet the specified criteria.\"
+
+Output Format:
+
+**Intraday Trades:**
+
+1.  **Stock**: [Stock Symbol]
+    *   **Action**: [Buy/Sell]
+    *   **Entry Price**: [Price]
+    *   **Stop Loss**: [Price]
+    *   **Target**: [Price]
+    *   **Rationale**: [Explanation]
+2.  **Stock**: [Stock Symbol]
+    *   **Action**: [Buy/Sell]
+    *   **Entry Price**: [Price]
+    *   **Stop Loss**: [Price]
+    *   **Target**: [Price]
+    *   **Rationale**: [Explanation]
+3.  **Stock**: [Stock Symbol]
+    *   **Action**: [Buy/Sell]
+    *   **Entry Price**: [Price]
+    *   **Stop Loss**: [Price]
+    *   **Target**: [Price]
+    *   **Rationale**: [Explanation]
+
+**Small Cap Stock Recommendation:**
+
+*   **Stock**: [Stock Symbol]
+    *   **Entry Price**: [Price]
+    *   **Target Price**: [Price]
+    *   **Sell Price**: [Price]
+    *   **Stop Loss**: [Price]
+    *   **Holding Period**: [Time Period]
+    *   **Rationale**: [Explanation]
+    *   **Return Interest %**: [Percentage]""")
+  si_text1 = """You are a seasoned intraday stock market analyst. Your task is to analyze technical indicators and current market conditions to recommend the top 3 intraday trades for today. You must also identify a promising small-cap stock for investment.
+
+Real-time Market Data Platforms
+• Brokers like Upstox (Trading APIs) or ICICI Direct Breeze API provide real-time tick-by-tick, order book, and options data—ideal for intraday setupsen.wikipedia.org ,groww.in,bullishindia.com,investopedia.com,investopedia.com,investopedia.com,icicidirect.com."""
+
+  model = "gemini-2.5-flash-preview-05-20"
+  contents = [
+    types.Content(
+      role="user",
+      parts=[
+        msg1_text1
+      ]
+    ),
+  ]
+
+  generate_content_config = types.GenerateContentConfig(
+    temperature = 0,
+    top_p = 1,
+    seed = 0,
+    max_output_tokens = 65535,
+    safety_settings = [types.SafetySetting(
+      category="HARM_CATEGORY_HATE_SPEECH",
+      threshold="OFF"
+    ),types.SafetySetting(
+      category="HARM_CATEGORY_DANGEROUS_CONTENT",
+      threshold="OFF"
+    ),types.SafetySetting(
+      category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+      threshold="OFF"
+    ),types.SafetySetting(
+      category="HARM_CATEGORY_HARASSMENT",
+      threshold="OFF"
+    )],
+    system_instruction=[types.Part.from_text(text=si_text1)],
+  )
+
+  for chunk in client.models.generate_content_stream(
+    model = model,
+    contents = contents,
+    config = generate_content_config,
+    ):
+    print(chunk.text, end="")
+
+generate()
